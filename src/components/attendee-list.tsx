@@ -6,9 +6,9 @@ import {
   ChevronRight,
   ChevronsRight,
 } from "lucide-react";
-import dayjs from 'dayjs';
-import 'dayjs/locale/pt-br'
-import relativeTime from 'dayjs/plugin/relativeTime';
+import dayjs from "dayjs";
+import "dayjs/locale/pt-br";
+import relativeTime from "dayjs/plugin/relativeTime";
 import { IconButton } from "./Icon-button";
 import { Table } from "./table/Table";
 import { TableHeader } from "./table/Table-header";
@@ -17,14 +17,33 @@ import { TableRow } from "./table/Table-row";
 import { ChangeEvent, useState } from "react";
 import { attendee } from "../data/attendee";
 
-dayjs.extend(relativeTime)
-dayjs.locale('pt-br')
+dayjs.extend(relativeTime);
+dayjs.locale("pt-br");
 
 export function AttendeeList() {
-  const [searchInput, setSearchInput] = useState('')
+  const [searchInput, setSearchInput] = useState("");
+  const [page, setPage] = useState(1);
+
+  const totalPages = Math.ceil(attendee.length / 10)
 
   function onSearchChanged(event: ChangeEvent<HTMLInputElement>) {
-    setSearchInput(event.target.value)
+    setSearchInput(event.target.value);
+  }
+
+  function goToFirstPage() {
+    setPage(1)
+  }
+  
+  function goToLastPage() {
+    setPage(totalPages)
+  }
+
+  function goToNextPage() {
+    setPage(page + 1)
+  }
+  
+  function goToPreviusPage() {
+    setPage(page - 1)
   }
 
   return (
@@ -41,6 +60,8 @@ export function AttendeeList() {
             onChange={onSearchChanged}
           />
         </div>
+
+        {searchInput}
       </div>
 
       <Table>
@@ -63,9 +84,12 @@ export function AttendeeList() {
           </tr>
         </thead>
         <tbody>
-          {attendee.map((attende) => {
+          {attendee.slice((page - 1) * 10, page * 10).map((attende) => {
             return (
-              <TableRow key={attende.id} className="border-b border-white/10 hover:bg-white/5">
+              <TableRow
+                key={attende.id}
+                className="border-b border-white/10 hover:bg-white/5"
+              >
                 <TableCell>
                   <input
                     type="checkbox"
@@ -94,22 +118,26 @@ export function AttendeeList() {
         </tbody>
         <tfoot>
           <tr>
-            <TableCell colSpan={3}>Mostrando 10 de 228 items</TableCell>
+            <TableCell colSpan={3}>
+              Mostrando 10 de {attendee.length} items
+            </TableCell>
             <TableCell colSpan={3} className="text-right">
               <div className="inline-flex items-center gap-8">
-                <span>Página 1 de 23</span>
+                <span>
+                  Página {page} de {totalPages}
+                </span>
 
                 <div className="flex gap-1.5">
-                  <IconButton>
+                  <IconButton onClick={goToFirstPage} disabled={page === 1} >
                     <ChevronsLeft className="size-4" />
                   </IconButton>
-                  <IconButton>
+                  <IconButton onClick={goToPreviusPage} disabled={page === 1} >
                     <ChevronLeft className="size-4" />
                   </IconButton>
-                  <IconButton>
+                  <IconButton onClick={goToNextPage} disabled={page === totalPages} >
                     <ChevronRight className="size-4" />
                   </IconButton>
-                  <IconButton>
+                  <IconButton onClick={goToLastPage} disabled={page === totalPages} >
                     <ChevronsRight className="size-4" />
                   </IconButton>
                 </div>
