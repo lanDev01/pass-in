@@ -11,8 +11,16 @@ import { Table } from "./table/Table";
 import { TableHeader } from "./table/Table-header";
 import { TableCell } from "./table/Table-cell";
 import { TableRow } from "./table/Table-row";
+import { ChangeEvent, useState } from "react";
+import { attendee } from "../data/attendee";
 
 export function AttendeeList() {
+  const [searchInput, setSearchInput] = useState('')
+
+  function onSearchChanged(event: ChangeEvent<HTMLInputElement>) {
+    setSearchInput(event.target.value)
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex gap-3">
@@ -24,6 +32,7 @@ export function AttendeeList() {
             type="text"
             placeholder="Buscar participante"
             className="bg-transparent flex-1 outline-none border-0 p-0 text-sm"
+            onChange={onSearchChanged}
           />
         </div>
       </div>
@@ -48,26 +57,26 @@ export function AttendeeList() {
           </tr>
         </thead>
         <tbody>
-          {Array.from({ length: 8 }).map((_, i) => {
+          {attendee.map((attende) => {
             return (
-              <TableRow key={i} className="border-b border-white/10 hover:bg-white/5">
+              <TableRow key={attende.id} className="border-b border-white/10 hover:bg-white/5">
                 <TableCell>
                   <input
                     type="checkbox"
                     className="size-4 bg-black/20 rounded border border-white/10"
                   />
                 </TableCell>
-                <TableCell>123587</TableCell>
+                <TableCell>{attende.id}</TableCell>
                 <TableCell>
                   <div className="flex flex-col gap-1">
                     <span className="font-semibold text-white">
-                      Alan Gonçalves
+                      {attende.name}
                     </span>
-                    <span>lnjnr9215@gmail.com</span>
+                    <span>{attende.email}</span>
                   </div>
                 </TableCell>
-                <TableCell>7 Dias atrás</TableCell>
-                <TableCell>3 Dias atrás</TableCell>
+                <TableCell>{attende.createdAt.toISOString()}</TableCell>
+                <TableCell>{attende.checkedInAt.toISOString()}</TableCell>
                 <TableCell>
                   <IconButton transparent>
                     <MoreHorizontal className="size-4" />
