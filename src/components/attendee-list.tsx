@@ -28,43 +28,87 @@ interface Attendee {
 }
 
 export function AttendeeList() {
-  const [searchInput, setSearchInput] = useState("");
-  const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState(() => {
+    const url = new URL(window.location.toString())
 
-  const [total, setTotal] = useState(0)
+    if (url.searchParams.has('search')) {
+      return url.searchParams.get('search') ?? ''
+    }
+
+    return ''
+  });
+
+  const [page, setPage] = useState(() => {
+    const url = new URL(window.location.toString())
+
+    if (url.searchParams.has('page')) {
+      return Number(url.searchParams.get('page'))
+    }
+
+    return 1
+  });
+
+  const [total, setTotal] = useState(0);
   const [attendees, setAttendees] = useState<Attendee[]>([]);
 
   const totalPages = Math.ceil(total / 10);
 
   useEffect(() => {
-    fetch(
-      `http://localhost:3333/events/17ff50de-fafc-4dc3-92ff-39066078e802/attendees?pageIndex=${page - 1}`
-    )
+    const url = new URL(
+      "http://localhost:3333/events/17ff50de-fafc-4dc3-92ff-39066078e802/attendees"
+    );
+
+    url.searchParams.set("pageIndex", String(page - 1));
+
+    if (searchInput.length > 0) {
+      url.searchParams.set("query", searchInput);
+    }
+
+    fetch(url)
       .then((response) => response.json())
       .then((data) => {
         setAttendees(data.attendees);
-        setTotal(data.total)
+        setTotal(data.total);
       });
-  }, [page]);
+  }, [page, searchInput]);
+
+  function setCurrentSearch(search: string) {
+    const url = new URL(window.location.toString());
+
+    url.searchParams.set("search", search);
+
+    window.history.pushState({}, "", url);
+
+    setSearchInput(search)
+  }
+
+  function setCurrentPage(page: number) {
+    const url = new URL(window.location.toString());
+
+    url.searchParams.set("page", String(page));
+
+    window.history.pushState({}, "", url);
+  }
 
   function onSearchChanged(event: ChangeEvent<HTMLInputElement>) {
-    setSearchInput(event.target.value);
+    setCurrentSearch(event.target.value);
+    setCurrentPage(1);
   }
 
   function goToFirstPage() {
-    setPage(1);
+    setCurrentPage(1);
   }
 
   function goToLastPage() {
-    setPage(totalPages);
+    setCurrentPage(totalPages);
   }
 
   function goToNextPage() {
-    setPage(page + 1);
+    setCurrentPage(page + 1);
   }
 
   function goToPreviusPage() {
-    setPage(page - 1);
+    setCurrentPage(page + 1);
   }
 
   return (
@@ -77,12 +121,10 @@ export function AttendeeList() {
           <input
             type="text"
             placeholder="Buscar participante"
-            className="bg-transparent flex-1 outline-none border-0 p-0 text-sm"
+            className="bg-transparent flex-1 outline-none border-0 p-0 text-sm focus:ring-0"
             onChange={onSearchChanged}
           />
         </div>
-
-        {searchInput}
       </div>
 
       <Table>
@@ -128,9 +170,11 @@ export function AttendeeList() {
                 </TableCell>
                 <TableCell>{dayjs().to(attende.createdAt)}</TableCell>
                 <TableCell>
-                  {attende.checkedInAt === null
-                    ? <span className="text-zinc-400">Não fez check-in</span>
-                    : dayjs().to(attende.checkedInAt)}
+                  {attende.checkedInAt === null ? (
+                    <span className="text-zinc-400">Não fez check-in</span>
+                  ) : (
+                    dayjs().to(attende.checkedInAt)
+                  )}
                 </TableCell>
                 <TableCell>
                   <IconButton transparent>
