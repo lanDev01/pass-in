@@ -14,36 +14,55 @@ import { Table } from "./table/Table";
 import { TableHeader } from "./table/Table-header";
 import { TableCell } from "./table/Table-cell";
 import { TableRow } from "./table/Table-row";
-import { ChangeEvent, useState } from "react";
-import { attendee } from "../data/attendee";
+import { ChangeEvent, useEffect, useState } from "react";
 
 dayjs.extend(relativeTime);
 dayjs.locale("pt-br");
 
+interface Attendee {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: string;
+  checkedInAt: string | null;
+}
+
 export function AttendeeList() {
   const [searchInput, setSearchInput] = useState("");
   const [page, setPage] = useState(1);
+  const [attendees, setAttendees] = useState<Attendee[]>([]);
 
-  const totalPages = Math.ceil(attendee.length / 10)
+  const totalPages = Math.ceil(attendees.length / 10);
+
+  useEffect(() => {
+    fetch(
+      "http://localhost:3333/events/17ff50de-fafc-4dc3-92ff-39066078e802/attendees"
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+        setAttendees(data.attendees);
+      });
+  }, [page]);
 
   function onSearchChanged(event: ChangeEvent<HTMLInputElement>) {
     setSearchInput(event.target.value);
   }
 
   function goToFirstPage() {
-    setPage(1)
+    setPage(1);
   }
-  
+
   function goToLastPage() {
-    setPage(totalPages)
+    setPage(totalPages);
   }
 
   function goToNextPage() {
-    setPage(page + 1)
+    setPage(page + 1);
   }
-  
+
   function goToPreviusPage() {
-    setPage(page - 1)
+    setPage(page - 1);
   }
 
   return (
@@ -84,7 +103,7 @@ export function AttendeeList() {
           </tr>
         </thead>
         <tbody>
-          {attendee.slice((page - 1) * 10, page * 10).map((attende) => {
+          {attendees.map((attende) => {
             return (
               <TableRow
                 key={attende.id}
@@ -106,7 +125,11 @@ export function AttendeeList() {
                   </div>
                 </TableCell>
                 <TableCell>{dayjs().to(attende.createdAt)}</TableCell>
-                <TableCell>{dayjs().to(attende.checkedInAt)}</TableCell>
+                <TableCell>
+                  {attende.checkedInAt === null
+                    ? <span className="text-zinc-400">Não fez check-in</span>
+                    : dayjs().to(attende.checkedInAt)}
+                </TableCell>
                 <TableCell>
                   <IconButton transparent>
                     <MoreHorizontal className="size-4" />
@@ -119,7 +142,7 @@ export function AttendeeList() {
         <tfoot>
           <tr>
             <TableCell colSpan={3}>
-              Mostrando 10 de {attendee.length} items
+              Mostrando 10 de {attendees.length} items
             </TableCell>
             <TableCell colSpan={3} className="text-right">
               <div className="inline-flex items-center gap-8">
@@ -128,16 +151,22 @@ export function AttendeeList() {
                 </span>
 
                 <div className="flex gap-1.5">
-                  <IconButton onClick={goToFirstPage} disabled={page === 1} >
+                  <IconButton onClick={goToFirstPage} disabled={page === 1}>
                     <ChevronsLeft className="size-4" />
                   </IconButton>
-                  <IconButton onClick={goToPreviusPage} disabled={page === 1} >
+                  <IconButton onClick={goToPreviusPage} disabled={page === 1}>
                     <ChevronLeft className="size-4" />
                   </IconButton>
-                  <IconButton onClick={goToNextPage} disabled={page === totalPages} >
+                  <IconButton
+                    onClick={goToNextPage}
+                    disabled={page === totalPages}
+                  >
                     <ChevronRight className="size-4" />
                   </IconButton>
-                  <IconButton onClick={goToLastPage} disabled={page === totalPages} >
+                  <IconButton
+                    onClick={goToLastPage}
+                    disabled={page === totalPages}
+                  >
                     <ChevronsRight className="size-4" />
                   </IconButton>
                 </div>
